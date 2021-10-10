@@ -80,6 +80,11 @@ type PGBouncerPodSpec struct {
 	// +optional
 	CustomTLSSecret *corev1.SecretProjection `json:"customTLSSecret,omitempty"`
 
+	// Configuration for pgBouncer exporter container
+	// More info: https://github.com/prometheus-community/pgbouncer_exporter
+	// +optional
+	Exporter *PGBouncerExporter `json:"exporter,omitempty"`
+
 	// Name of a container image that can run PgBouncer 1.15 or newer. Changing
 	// this value causes PgBouncer to restart. The image may also be set using
 	// the RELATED_IMAGE_PGBOUNCER environment variable.
@@ -138,6 +143,23 @@ type PGBouncerSidecars struct {
 	// Defines the configuration for the pgBouncer config sidecar container
 	// +optional
 	PGBouncerConfig *Sidecar `json:"pgbouncerConfig,omitempty"`
+}
+
+type PGBouncerExporter struct {
+	// Resources for pgBouncer exporter container
+	// +optional
+	Resources *Sidecar `json:"resources,omitempty"`
+
+	// pgBouncer exporter container image
+	// The image may also be set using the RELATED_IMAGE_PGBOUNCER_EXPORTER environment variable
+	// +optional
+	Image string `json:"image,omitempty"`
+
+	// Port on which pgBouncer exporter should expose metrics.
+	// +optional
+	// +kubebuilder:default=9127
+	// +kubebuilder:validation:Minimum=1024
+	Port *int32 `json:"port,omitempty"`
 }
 
 // Default returns the default port for PgBouncer (5432) if a port is not

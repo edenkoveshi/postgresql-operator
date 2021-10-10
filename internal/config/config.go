@@ -69,6 +69,19 @@ func PGExporterContainerImage(cluster *v1beta1.PostgresCluster) string {
 	return defaultFromEnv(image, "RELATED_IMAGE_PGEXPORTER")
 }
 
+// PGBouncerExporterContainerImage returns the container image to use for the
+// PGBouncer Exporter.
+func PGBouncerExporterContainerImage(cluster *v1beta1.PostgresCluster) string {
+	var image string
+	if cluster.Spec.Proxy != nil &&
+		cluster.Spec.Proxy.PGBouncer != nil &&
+		cluster.Spec.Proxy.PGBouncer.Exporter != nil {
+		image = cluster.Spec.Proxy.PGBouncer.Exporter.Image
+	}
+
+	return defaultFromEnv(image, "RELATED_IMAGE_PGBOUNCER_EXPORTER")
+}
+
 // PostgresContainerImage returns the container image to use for PostgreSQL.
 func PostgresContainerImage(cluster *v1beta1.PostgresCluster) string {
 	image := cluster.Spec.Image

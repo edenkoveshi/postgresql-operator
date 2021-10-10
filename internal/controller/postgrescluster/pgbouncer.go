@@ -288,6 +288,18 @@ func (r *Reconciler) generatePGBouncerService(
 		TargetPort: intstr.FromString(naming.PortPGBouncer),
 	}}
 
+	// If PGBouncer exporter is enabled, add PGBoucner exporter port to the PGBouncer service.
+	if cluster.Spec.Proxy.PGBouncer.Exporter != nil {
+		exporterPort := corev1.ServicePort{
+			Name:       naming.PortExporter,
+			Port:       *cluster.Spec.Proxy.PGBouncer.Exporter.Port,
+			Protocol:   corev1.ProtocolTCP,
+			TargetPort: intstr.FromString(naming.PortExporter),
+		}
+
+		service.Spec.Ports = append(service.Spec.Ports, exporterPort)
+	}
+
 	err := errors.WithStack(r.setControllerReference(cluster, service))
 
 	return service, true, err

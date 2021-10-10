@@ -42,6 +42,8 @@ const (
 	verifierSecretKey   = "pgbouncer-verifier"  // #nosec G101 this is a name, not a credential
 	emptyConfigMapKey   = "pgbouncer-empty"
 	iniFileConfigMapKey = "pgbouncer.ini"
+
+	PGBouncerExecutablePath = "/bin/pgbouncer_exporter"
 )
 
 const (
@@ -274,4 +276,18 @@ done
 	wrapper := `monitor() {` + script + `}; export directory="$1"; export -f monitor; exec -a "$0" bash -ceu monitor`
 
 	return []string{"bash", "-ceu", "--", wrapper, name, configDirectory}
+}
+
+// PGBouncerExporterCommand returns the command to start the PGBouncer exporter container
+// should be "/bin/pgbouncer --web.listen-address=:<port> --pgBouncer.connectionString='postgres://postgres:@<PGBouncer>:<PGBouncerPort>/pgbouncer?sslmode=disable'"
+// for more information: https://github.com/prometheus-community/pgbouncer_exporter
+func PGBouncerExporterArgs(cluster *v1beta1.PostgresCluster) []string {
+	PGBouncerPort := cluster.Spec.Proxy.PGBouncer.Port
+	PGBouncerExporterPort := cluster.Spec.Proxy.PGBouncer.Exporter.Port
+	PGBouncerServiceName := naming.ClusterPGBouncer(cluster).Name
+	return []string{fmt.Sprintf("--web.listen-address=\":%d\"", *PGBouncerExporterPort),
+		//fmt.Sprintf("--pgBouncer.connectionString=\"postgres://localhost:%d/pgbouncer?sslmode=disable\"", *PGBouncerPort)}
+		//fmt.Sprintf("--pgBouncer.connectionString=\"postgres://%s@%s:%d/pgbouncer?sslmode=disable\"", postgresqlUser, PGBouncerServiceName, *PGBouncerPort),
+		fmt.Sprintf("--pgBouncer.connectionString=\"postgres://%s@%s:%d/pgbouncer\"", postgresqlUser, PGBouncerServiceName, *PGBouncerPort)}
+	//postgres:@
 }

@@ -52,6 +52,8 @@ const (
 	// ContainerPGMonitorExporter is the name of a container running postgres_exporter
 	ContainerPGMonitorExporter = "exporter"
 
+	// ContainerPGBouncerExporter is the name of a container running PGBouncer exporter
+	ContainerPGBouncerExporter = "exporter"
 	// ContainerJobMovePGDataDir is the name of the job container utilized to copy v4 Operator
 	// pgData directories to the v5 default location
 	ContainerJobMovePGDataDir = "pgdata-move-job"
@@ -64,7 +66,7 @@ const (
 )
 
 const (
-	// PortExporter is the named port for the "exporter" container
+	// PortExporter is the named port for the "exporter" container and pgbouncer exporter container
 	PortExporter = "exporter"
 	// PortPGBouncer is the name of a port that connects to PgBouncer.
 	PortPGBouncer = "pgbouncer"

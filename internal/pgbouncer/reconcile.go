@@ -219,7 +219,50 @@ func Pod(
 		reloader.Resources = *inCluster.Spec.Proxy.PGBouncer.Sidecars.PGBouncerConfig.Resources
 	}
 
+	// If PGBouncer exporter is enabled, add a PGBouncer exporter container
+	var exporterContainer *corev1.Container
+	if inCluster.Spec.Proxy.PGBouncer.Exporter != nil {
+		exporterContainer = &corev1.Container{
+			Name: naming.ContainerPGBouncerExporter,
+
+			Command:         []string{PGBouncerExecutablePath},
+			Args:            PGBouncerExporterArgs(inCluster),
+			Image:           config.PGBouncerExporterContainerImage(inCluster),
+			ImagePullPolicy: inCluster.Spec.ImagePullPolicy,
+
+			SecurityContext: &corev1.SecurityContext{
+				// Prevent any container processes from gaining privileges.
+				AllowPrivilegeEscalation: initialize.Bool(false),
+
+				// Processes in privileged containers are essentially root on the host.
+				Privileged: initialize.Bool(false),
+
+				// Limit filesystem changes to volumes that are mounted read-write.
+				ReadOnlyRootFilesystem: initialize.Bool(true),
+
+				// Fail to start the container if its image runs as UID 0 (root).
+				RunAsNonRoot: initialize.Bool(false),
+			},
+
+			// VolumeMounts: []corev1.VolumeMount{{
+			// 	Name:      configVol.Name,
+			// 	MountPath: configDirectory,
+			// 	ReadOnly:  true,
+			// }},
+
+			Ports: []corev1.ContainerPort{{
+				Name:          naming.PortExporter,
+				ContainerPort: *inCluster.Spec.Proxy.PGBouncer.Exporter.Port,
+				Protocol:      corev1.ProtocolTCP,
+			}},
+		}
+	}
+
 	outPod.Containers = []corev1.Container{container, reloader}
+
+	if exporterContainer != nil {
+		outPod.Containers = append(outPod.Containers, *exporterContainer)
+	}
 
 	outPod.Volumes = []corev1.Volume{backend, configVol, frontend}
 }
